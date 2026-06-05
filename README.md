@@ -56,7 +56,7 @@ $result = $db->query("SELECT @result AS result, @kode_trx AS kode_trx")->fetch_a
 $p_result = $result['result'];
 $p_kode_trx = $result['kode_trx'];
 
-## 💾 Backup Otomatis
+### 💾 Backup Otomatis
 
 Untuk menjaga ketersediaan dan keamanan data, sistem ini dilengkapi fitur backup otomatis menggunakan `mysqldump` dan `task scheduler`. Backup dilakukan oleh admin dan hasilnya disimpan dengan nama file yang mencakup `timestamp`, sehingga mudah ditelusuri. Semua file backup disimpan di direktori `storage/backups`.
 
