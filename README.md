@@ -27,6 +27,8 @@ Selain itu, sistem ini juga menerapkan beberapa konsep database lanjutan lainnya
 
 Dengan penerapan konsep tersebut, Ngonser.id tidak hanya berfungsi sebagai aplikasi pemesanan tiket konser, tetapi juga menjadi implementasi nyata dari pengelolaan database yang lebih aman, terstruktur, dan konsisten.
 
+<img src="imgAset/Function.png" alt="Tampilan Function NGONSER.ID" width="900">
+
 ## 💾 Backup Otomatis
 
 Untuk menjaga ketersediaan dan keamanan data, sistem ini dilengkapi fitur backup otomatis menggunakan `mysqldump` dan `task scheduler`. Backup dilakukan oleh admin dan hasilnya disimpan dengan nama file yang mencakup `timestamp`, sehingga mudah ditelusuri. Semua file backup disimpan di direktori `storage/backups`.
