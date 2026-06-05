@@ -7,7 +7,17 @@ Sistem ini dilengkapi dengan fitur login pengguna, dashboard user, pemesanan tik
 
 Berikut adalah tampilan halaman utama dari sistem **NGONSER.ID**:
 
+### Trigger
+
 <img src="imgAset/Dashboard.png" alt="Tampilan Dashboard NGONSER.ID" width="900">
+
+### Function
+
+<img src="imgAset/Function.png" alt="Function NGONSER.ID" width="900">
+
+### Stored Procedure
+
+<img src="imgAset/procedur.png" alt="Stored Procedure NGONSER.ID" width="900">
 
 
 ## 📌 Detail Konsep
