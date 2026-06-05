@@ -18,29 +18,6 @@ Dalam project **Ngonser.id**, stored procedure digunakan untuk menangani proses 
 
 Selain itu, sistem ini juga menerapkan beberapa konsep database lanjutan lainnya, seperti **function**, **trigger**, **view**, **transaction**, **backup database**, dan **simulasi deadlock**. Konsep-konsep ini digunakan untuk mendukung pengelolaan data konser, tiket, transaksi, dan pengguna agar sistem dapat berjalan lebih stabil.
 <img src="imgAset/triggers.png" alt="Stored Procedure dan Trigger NGONSER.ID" width="900">
-### ⚙️ Implementasi Trigger pada Web
-
-Trigger pada project **Ngonser.id** dibuat di sisi database melalui file `database/ngonser.sql`. Namun, trigger tersebut berjalan ketika sistem web melakukan proses transaksi melalui file `booking.php`.
-
-Pada file `booking.php`, trigger tidak dipanggil secara langsung, karena trigger bekerja otomatis di database. Trigger akan aktif ketika proses checkout membuat data transaksi baru, dan ketika proses konfirmasi pembayaran memperbarui status transaksi.
-
-#### 📄 booking.php
-
-Proses checkout tiket dilakukan dengan memanggil stored procedure `sp_checkout_tiket`. Proses ini akan membuat data transaksi baru, sehingga trigger `trg_after_insert_transaksi` dapat berjalan otomatis.
-
-```php
-$stmt = $db->prepare("CALL sp_checkout_tiket(?, ?, ?, ?, @result, @kode_trx)");
-$stmt->bind_param('iiis', $userId, $tiketId, $jumlah, $metode);
-$stmt->execute();
-
-while ($db->more_results() && $db->next_result()) {}
-
-$res = $db->query("SELECT @result AS result, @kode_trx AS kode_trx")->fetch_assoc();
-$msg = $res['result'] ?? '';
-$kode = $res['kode_trx'] ?? '';
-<img src="imgAset/Function.png" alt="Tampilan Function NGONSER.ID" width="900">
-<img src="imgAset/procedur.png" alt="Tampilan Procedure NGONSER.ID" width="900">
-
 
 - **Function** digunakan untuk membantu menghasilkan nilai tertentu, seperti status ketersediaan tiket berdasarkan jumlah kuota dan tiket yang sudah terjual.
 - **Trigger** digunakan untuk menjalankan proses otomatis ketika terjadi perubahan data, misalnya saat transaksi pembayaran dikonfirmasi dan stok tiket perlu diperbarui.
