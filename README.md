@@ -9,6 +9,24 @@ Berikut adalah tampilan halaman utama dari sistem **NGONSER.ID**:
 
 <img src="imgAset/dashboard.png" alt="Tampilan Dashboard NGONSER.ID" width="900">
 
+
+## 📌 Detail Konsep
+
+🗂️ **Stored Procedure** bertindak seperti SOP internal yang menetapkan alur eksekusi berbagai operasi penting di sistem. Procedure ini disimpan langsung di lapisan database, sehingga dapat membantu menjaga konsistensi, efisiensi, dan keamanan eksekusi, terutama pada sistem yang digunakan oleh banyak user secara bersamaan.
+
+Dalam project **Ngonser.id**, stored procedure digunakan untuk menangani proses penting seperti penambahan tiket, penghapusan tiket, checkout pemesanan tiket, dan konfirmasi pembayaran. Dengan adanya stored procedure, proses yang berhubungan langsung dengan data transaksi tidak hanya dijalankan dari sisi PHP, tetapi juga dikontrol langsung oleh database agar lebih aman dan terstruktur.
+
+Selain itu, sistem ini juga menerapkan beberapa konsep database lanjutan lainnya, seperti **function**, **trigger**, **view**, **transaction**, **backup database**, dan **simulasi deadlock**. Konsep-konsep ini digunakan untuk mendukung pengelolaan data konser, tiket, transaksi, dan pengguna agar sistem dapat berjalan lebih stabil.
+
+- **Function** digunakan untuk membantu menghasilkan nilai tertentu, seperti status ketersediaan tiket berdasarkan jumlah kuota dan tiket yang sudah terjual.
+- **Trigger** digunakan untuk menjalankan proses otomatis ketika terjadi perubahan data, misalnya saat transaksi pembayaran dikonfirmasi dan stok tiket perlu diperbarui.
+- **View** digunakan untuk menampilkan data gabungan dari beberapa tabel agar laporan dan riwayat transaksi lebih mudah dibaca.
+- **Transaction** digunakan untuk memastikan proses pemesanan tiket berjalan secara konsisten, sehingga data transaksi dan tiket tidak berubah sebagian saja.
+- **Backup Database** digunakan untuk menjaga keamanan data agar dapat dipulihkan kembali jika terjadi kesalahan atau kehilangan data.
+- **Deadlock Simulation** digunakan untuk menggambarkan kondisi ketika dua transaksi saling menunggu resource, serta bagaimana sistem database menangani kondisi tersebut.
+
+Dengan penerapan konsep tersebut, Ngonser.id tidak hanya berfungsi sebagai aplikasi pemesanan tiket konser, tetapi juga menjadi implementasi nyata dari pengelolaan database yang lebih aman, terstruktur, dan konsisten.
+
 ## 💾 Backup Otomatis
 
 Untuk menjaga ketersediaan dan keamanan data, sistem ini dilengkapi fitur backup otomatis menggunakan `mysqldump` dan `task scheduler`. Backup dilakukan oleh admin dan hasilnya disimpan dengan nama file yang mencakup `timestamp`, sehingga mudah ditelusuri. Semua file backup disimpan di direktori `storage/backups`.
