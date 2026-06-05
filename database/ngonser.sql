@@ -176,3 +176,236 @@ CREATE VIEW v_pembeli_aktif AS
 SELECT user_id, 'Q1-2025' AS periode FROM transaksi WHERE created_at >= '2025-01-01' AND created_at < '2025-04-01' AND status='paid'
 UNION
 SELECT user_id, 'All-Time' AS periode FROM transaksi WHERE status='paid';
+
+DELIMITER //
+
+DROP FUNCTION IF EXISTS fn_format_rupiah //
+CREATE FUNCTION fn_format_rupiah(harga DECIMAL(14,2))
+RETURNS VARCHAR(30)
+DETERMINISTIC
+BEGIN
+    RETURN CONCAT('Rp ', FORMAT(harga, 0, 'id_ID'));
+END //
+
+DROP FUNCTION IF EXISTS fn_status_tiket //
+CREATE FUNCTION fn_status_tiket(kuota INT, terjual INT)
+RETURNS VARCHAR(20)
+DETERMINISTIC
+BEGIN
+    DECLARE sisa INT;
+    SET sisa = kuota - terjual;
+    IF sisa <= 0 THEN
+        RETURN 'HABIS';
+    ELSEIF sisa <= 10 THEN
+        RETURN 'HAMPIR HABIS';
+    ELSE
+        RETURN 'TERSEDIA';
+    END IF;
+END //
+
+DROP FUNCTION IF EXISTS fn_generate_kode_trx //
+CREATE FUNCTION fn_generate_kode_trx(user_id INT)
+RETURNS VARCHAR(30)
+DETERMINISTIC
+BEGIN
+    RETURN CONCAT('TRX-', DATE_FORMAT(NOW(), '%Y%m%d'), '-', LPAD(user_id, 4, '0'), LPAD(FLOOR(RAND()*9999),4,'0'));
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+DROP PROCEDURE IF EXISTS sp_tambah_tiket //
+CREATE PROCEDURE sp_tambah_tiket(
+    IN p_konser_id  INT,
+    IN p_kategori   VARCHAR(100),
+    IN p_harga      DECIMAL(12,2),
+    IN p_kuota      INT,
+    IN p_keterangan TEXT,
+    OUT p_result    VARCHAR(100)
+)
+BEGIN
+    IF p_kuota <= 0 THEN
+        SET p_result = 'ERROR: Kuota harus lebih dari 0';
+    ELSE
+        INSERT INTO tiket (konser_id, kategori, harga, kuota, keterangan)
+        VALUES (p_konser_id, p_kategori, p_harga, p_kuota, p_keterangan);
+        SET p_result = CONCAT('SUCCESS: Tiket ID=', LAST_INSERT_ID(), ' berhasil ditambahkan');
+    END IF;
+END //
+
+DROP PROCEDURE IF EXISTS sp_lihat_tiket //
+CREATE PROCEDURE sp_lihat_tiket(IN p_konser_id INT)
+BEGIN
+    SELECT
+        t.id, t.kategori,
+        fn_format_rupiah(t.harga)   AS harga_format,
+        t.kuota, t.terjual,
+        (t.kuota - t.terjual)       AS sisa,
+        fn_status_tiket(t.kuota, t.terjual) AS ketersediaan
+    FROM tiket t
+    WHERE t.konser_id = p_konser_id
+    ORDER BY t.harga DESC;
+END //
+
+DROP PROCEDURE IF EXISTS sp_update_tiket //
+CREATE PROCEDURE sp_update_tiket(
+    IN p_id         INT,
+    IN p_kategori   VARCHAR(100),
+    IN p_harga      DECIMAL(12,2),
+    IN p_kuota      INT,
+    OUT p_result    VARCHAR(100)
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM tiket WHERE id = p_id) THEN
+        SET p_result = 'ERROR: Tiket tidak ditemukan';
+    ELSE
+        UPDATE tiket SET kategori=p_kategori, harga=p_harga, kuota=p_kuota WHERE id=p_id;
+        SET p_result = 'SUCCESS: Tiket berhasil diperbarui';
+    END IF;
+END //
+
+DROP PROCEDURE IF EXISTS sp_hapus_tiket //
+CREATE PROCEDURE sp_hapus_tiket(IN p_id INT, OUT p_result VARCHAR(100))
+BEGIN
+    IF EXISTS (SELECT 1 FROM transaksi WHERE tiket_id = p_id AND status IN ('pending','paid')) THEN
+        SET p_result = 'ERROR: Tiket memiliki transaksi aktif, tidak dapat dihapus';
+    ELSE
+        DELETE FROM tiket WHERE id = p_id;
+        SET p_result = 'SUCCESS: Tiket berhasil dihapus';
+    END IF;
+END //
+
+DROP PROCEDURE IF EXISTS sp_checkout_tiket //
+CREATE PROCEDURE sp_checkout_tiket(
+    IN  p_user_id       INT,
+    IN  p_tiket_id      INT,
+    IN  p_jumlah        INT,
+    IN  p_metode        VARCHAR(50),
+    OUT p_result        VARCHAR(200),
+    OUT p_kode_trx      VARCHAR(30)
+)
+BEGIN
+    DECLARE v_harga     DECIMAL(12,2);
+    DECLARE v_sisa      INT;
+    DECLARE v_total     DECIMAL(14,2);
+    DECLARE v_kode      VARCHAR(30);
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_result   = 'ERROR: Terjadi kesalahan sistem, transaksi dibatalkan';
+        SET p_kode_trx = NULL;
+    END;
+
+    START TRANSACTION;
+
+    SELECT harga, (kuota - terjual) INTO v_harga, v_sisa
+    FROM tiket WHERE id = p_tiket_id FOR UPDATE;
+
+    IF v_sisa < p_jumlah THEN
+        ROLLBACK;
+        SET p_result   = 'ERROR: Tiket tidak mencukupi';
+        SET p_kode_trx = NULL;
+    ELSE
+        SET v_total = v_harga * p_jumlah;
+        SET v_kode  = fn_generate_kode_trx(p_user_id);
+
+        INSERT INTO transaksi (kode_transaksi, user_id, tiket_id, jumlah_tiket, total_harga, status, metode_bayar)
+        VALUES (v_kode, p_user_id, p_tiket_id, p_jumlah, v_total, 'pending', p_metode);
+
+        COMMIT;
+        SET p_result   = 'SUCCESS: Booking berhasil, silakan selesaikan pembayaran';
+        SET p_kode_trx = v_kode;
+    END IF;
+END //
+
+DROP PROCEDURE IF EXISTS sp_konfirmasi_bayar //
+CREATE PROCEDURE sp_konfirmasi_bayar(
+    IN  p_kode_trx  VARCHAR(30),
+    OUT p_result    VARCHAR(200)
+)
+BEGIN
+    DECLARE v_trx_id    INT;
+    DECLARE v_status    VARCHAR(20);
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_result = 'ERROR: Gagal konfirmasi pembayaran';
+    END;
+
+    START TRANSACTION;
+    SELECT id, status INTO v_trx_id, v_status
+    FROM transaksi WHERE kode_transaksi = p_kode_trx FOR UPDATE;
+
+    IF v_trx_id IS NULL THEN
+        ROLLBACK;
+        SET p_result = 'ERROR: Kode transaksi tidak ditemukan';
+    ELSEIF v_status != 'pending' THEN
+        ROLLBACK;
+        SET p_result = CONCAT('ERROR: Transaksi sudah berstatus ', v_status);
+    ELSE
+        UPDATE transaksi SET status='paid', updated_at=NOW() WHERE id=v_trx_id;
+        COMMIT;
+        SET p_result = 'SUCCESS: Pembayaran berhasil dikonfirmasi';
+    END IF;
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+DROP TRIGGER IF EXISTS trg_after_insert_transaksi //
+CREATE TRIGGER trg_after_insert_transaksi
+AFTER INSERT ON transaksi
+FOR EACH ROW
+BEGIN
+    INSERT INTO log_transaksi (transaksi_id, kode_transaksi, user_id, aksi, keterangan)
+    VALUES (NEW.id, NEW.kode_transaksi, NEW.user_id, 'BOOKING_CREATED',
+            CONCAT('Booking ', NEW.jumlah_tiket, ' tiket, total Rp ', NEW.total_harga));
+END //
+
+DROP TRIGGER IF EXISTS trg_after_update_transaksi //
+CREATE TRIGGER trg_after_update_transaksi
+AFTER UPDATE ON transaksi
+FOR EACH ROW
+BEGIN
+    IF NEW.status = 'paid' AND OLD.status != 'paid' THEN
+        UPDATE tiket
+        SET terjual = terjual + NEW.jumlah_tiket
+        WHERE id = NEW.tiket_id;
+
+        INSERT INTO log_transaksi (transaksi_id, kode_transaksi, user_id, aksi, keterangan)
+        VALUES (NEW.id, NEW.kode_transaksi, NEW.user_id, 'PAYMENT_CONFIRMED',
+                CONCAT('Stok tiket ID=', NEW.tiket_id, ' berkurang ', NEW.jumlah_tiket, ' unit'));
+    END IF;
+
+    IF NEW.status = 'cancelled' AND OLD.status = 'paid' THEN
+        UPDATE tiket
+        SET terjual = terjual - NEW.jumlah_tiket
+        WHERE id = NEW.tiket_id;
+
+        INSERT INTO log_transaksi (transaksi_id, kode_transaksi, user_id, aksi, keterangan)
+        VALUES (NEW.id, NEW.kode_transaksi, NEW.user_id, 'CANCELLED_REFUND',
+                CONCAT('Stok tiket ID=', NEW.tiket_id, ' dikembalikan ', NEW.jumlah_tiket, ' unit'));
+    END IF;
+END //
+
+DROP TRIGGER IF EXISTS trg_before_insert_transaksi //
+CREATE TRIGGER trg_before_insert_transaksi
+BEFORE INSERT ON transaksi
+FOR EACH ROW
+BEGIN
+    DECLARE v_sisa INT;
+    SELECT (kuota - terjual) INTO v_sisa FROM tiket WHERE id = NEW.tiket_id;
+    IF v_sisa < NEW.jumlah_tiket THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Kuota tiket tidak mencukupi!';
+    END IF;
+END //
+
+DELIMITER ;
+
+CREATE USER IF NOT EXISTS 'adm_backup'@'localhost' IDENTIFIED BY 'admin123';
+GRANT SELECT, LOCK TABLES, SHOW VIEW, EVENT, TRIGGER ON ngonser_db.* TO 'adm_backup'@'localhost';
+FLUSH PRIVILEGES;
+
+COMMIT;
