@@ -7,7 +7,7 @@ Sistem ini dilengkapi dengan fitur login pengguna, dashboard user, pemesanan tik
 
 Berikut adalah tampilan halaman utama dari sistem **NGONSER.ID**:
 
-<img src="imgAset/dashboard.png" alt="Tampilan Dashboard NGONSER.ID" width="900">
+<img src="imgAset/Dashboard.png" alt="Tampilan Dashboard NGONSER.ID" width="900">
 
 
 ## 📌 Detail Konsep
