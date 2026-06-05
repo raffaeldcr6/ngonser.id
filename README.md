@@ -29,6 +29,7 @@ Selain itu, sistem ini juga menerapkan beberapa konsep database lanjutan lainnya
 Dengan penerapan konsep tersebut, Ngonser.id tidak hanya berfungsi sebagai aplikasi pemesanan tiket konser, tetapi juga menjadi implementasi nyata dari pengelolaan database yang lebih aman, terstruktur, dan konsisten.
 
 <img src="imgAset/Function.png" alt="Tampilan Function NGONSER.ID" width="900">
+<img src="imgAset/procedur.png" alt="Tampilan Procedure NGONSER.ID" width="900">
 
 ## 💾 Backup Otomatis
 
