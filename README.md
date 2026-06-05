@@ -20,6 +20,7 @@ Selain itu, sistem ini juga menerapkan beberapa konsep database lanjutan lainnya
 
 ### Trigger
 
+
 <img src="imgAset/triggers.png" alt="Stored Procedure dan Trigger NGONSER.ID" width="900">
 
 ### Function
@@ -40,6 +41,7 @@ Selain itu, sistem ini juga menerapkan beberapa konsep database lanjutan lainnya
 
 Dengan penerapan konsep tersebut, Ngonser.id tidak hanya berfungsi sebagai aplikasi pemesanan tiket konser, tetapi juga menjadi implementasi nyata dari pengelolaan database yang lebih aman, terstruktur, dan konsisten.
 
+
 ## 1. Stored Procedure & ACID Transaction
 Digunakan untuk menangani alur utama pemesanan tiket pada file `booking.php`. Prosedur ini menerapkan prinsip **ACID** dan **Row-Level Locking** untuk mencegah *oversold* (tiket terjual melebihi kuota).
 
@@ -57,6 +59,27 @@ $stmt->execute();
 $result = $db->query("SELECT @result AS result, @kode_trx AS kode_trx")->fetch_assoc();
 $p_result = $result['result'];
 $p_kode_trx = $result['kode_trx'];
+
+### ⚙️ Implementasi Trigger pada Web
+
+Trigger pada project **Ngonser.id** dibuat di sisi database melalui file `database/ngonser.sql`. Namun, trigger tersebut berjalan ketika sistem web melakukan proses transaksi melalui file `booking.php`.
+
+Pada file `booking.php`, trigger tidak dipanggil secara langsung, karena trigger bekerja otomatis di database. Trigger akan aktif ketika proses checkout membuat data transaksi baru, dan ketika proses konfirmasi pembayaran memperbarui status transaksi.
+
+#### 📄 booking.php
+
+Proses checkout tiket dilakukan dengan memanggil stored procedure `sp_checkout_tiket`. Proses ini akan membuat data transaksi baru, sehingga trigger `trg_after_insert_transaksi` dapat berjalan otomatis.
+
+```php
+$stmt = $db->prepare("CALL sp_checkout_tiket(?, ?, ?, ?, @result, @kode_trx)");
+$stmt->bind_param('iiis', $userId, $tiketId, $jumlah, $metode);
+$stmt->execute();
+
+while ($db->more_results() && $db->next_result()) {}
+
+$res = $db->query("SELECT @result AS result, @kode_trx AS kode_trx")->fetch_assoc();
+$msg = $res['result'] ?? '';
+$kode = $res['kode_trx'] ?? '';
 
 ### 💾 Backup Otomatis
 
