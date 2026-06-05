@@ -31,6 +31,20 @@ CREATE TABLE konser (
     created_at      DATETIME        DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
+CREATE TABLE konser_jakarta (
+    id              INT NOT NULL DEFAULT '0',
+    nama_konser     VARCHAR(150)    NOT NULL,
+    artis           VARCHAR(100)    NOT NULL,
+    venue           VARCHAR(200)    NOT NULL,
+    kota            VARCHAR(100)    NOT NULL,
+    tanggal_konser  DATE            NOT NULL,
+    jam_mulai       TIME            NOT NULL,
+    deskripsi       TEXT,
+    poster          VARCHAR(255)    DEFAULT 'default.jpg',
+    status          ENUM('upcoming','ongoing','selesai','batal') DEFAULT 'upcoming',
+    created_at      DATETIME        DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
 CREATE TABLE tiket (
     id              INT AUTO_INCREMENT PRIMARY KEY,
     konser_id       INT             NOT NULL,
@@ -58,6 +72,13 @@ CREATE TABLE transaksi (
     FOREIGN KEY (tiket_id)  REFERENCES tiket(id)  ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+CREATE TABLE jenis_bayar (
+    id              INT NOT NULL DEFAULT '0',
+    kode_transaksi  VARCHAR(30)     NOT NULL,
+    total_harga     DECIMAL(14,2)   NOT NULL,
+    metode_bayar    VARCHAR(50)
+) ENGINE=InnoDB;
+
 CREATE TABLE log_transaksi (
     id              INT AUTO_INCREMENT PRIMARY KEY,
     transaksi_id    INT,
@@ -77,41 +98,74 @@ CREATE TABLE backup_log (
     created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
-INSERT INTO users (nama, email, password, role, phone) VALUES
-('Administrator',  'admin@ngonser.id',  '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', '081234567890'),
-('Andi Pratama',   'andi@mail.com',     '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user',  '082111222333'),
-('Budi Santoso',   'budi@mail.com',     '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user',  '083222333444'),
-('Citra Dewi',     'citra@mail.com',    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user',  '085333444555');
+INSERT INTO users (id, nama, email, password, role, phone) VALUES
+(1, 'Administrator', 'admin@ngonser.id', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', '081234567890'),
+(2, 'Andi Pratama', 'andi@mail.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', '082111222333'),
+(3, 'Budi Santoso', 'budi@mail.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', '083222333444'),
+(4, 'Citra Dewi', 'citra@mail.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', '085333444555'),
+(5, 'Muhamad Raffael Ramadhani', 'raffael@gmail.com', '$2y$10$DU4VxRqY1/t/qEO5txPlOeyGKG35r3M8VcGAKfqeS/QKIK8Wyv7Au', 'user', '087262782828');
 
-INSERT INTO konser (nama_konser, artis, venue, kota, tanggal_konser, jam_mulai, deskripsi, status) VALUES
-('Konser Spektakuler 2025',  'Dewa 19',        'Stadion Gelora Bung Karno',  'Jakarta',   '2025-08-15', '19:00:00', 'Konser reuni Dewa 19 yang spektakuler!', 'upcoming'),
-('Soundrenaline 2025',       'Various Artist', 'Garuda Wisnu Kencana',       'Bali',      '2025-09-20', '15:00:00', 'Festival musik terbesar di Asia Tenggara.', 'upcoming'),
-('Synchronize Fest',         'Various Artist', 'Gambir Expo',                'Jakarta',   '2025-10-03', '14:00:00', 'Festival musik indie terbesar di Indonesia.', 'upcoming'),
-('Noah World Tour',          'NOAH',           'Istora Senayan',              'Jakarta',   '2025-07-10', '20:00:00', 'Tur dunia NOAH kembali hadir di Jakarta.', 'selesai'),
-('Java Jazz Festival',       'Various Artist', 'Jakarta International Expo', 'Jakarta',   '2025-03-01', '12:00:00', 'Pertemuan jazz internasional tahunan.', 'selesai');
+INSERT INTO konser (id, nama_konser, artis, venue, kota, tanggal_konser, jam_mulai, deskripsi, status) VALUES
+(1, 'Konser Spektakuler 2025', 'Dewa 19', 'Stadion Gelora Bung Karno', 'Jakarta', '2025-08-15', '19:00:00', 'Konser reuni Dewa 19 yang spektakuler!', 'upcoming'),
+(2, 'Soundrenaline 2025', 'Various Artist', 'Garuda Wisnu Kencana', 'Bali', '2025-09-20', '15:00:00', 'Festival musik terbesar di Asia Tenggara.', 'upcoming'),
+(3, 'Synchronize Fest', 'Various Artist', 'Gambir Expo', 'Jakarta', '2025-10-03', '14:00:00', 'Festival musik indie terbesar di Indonesia.', 'upcoming'),
+(4, 'Noah World Tour', 'NOAH', 'Istora Senayan', 'Jakarta', '2025-07-10', '20:00:00', 'Tur dunia NOAH kembali hadir di Jakarta.', 'selesai'),
+(5, 'Java Jazz Festival', 'Various Artist', 'Jakarta International Expo', 'Jakarta', '2025-03-01', '12:00:00', 'Pertemuan jazz internasional tahunan.', 'selesai');
 
-INSERT INTO tiket (konser_id, kategori, harga, kuota, terjual) VALUES
-(1, 'VVIP',          2500000, 100,  10),
-(1, 'VIP',           1500000, 300,  45),
-(1, 'Festival',       750000, 1000, 200),
-(2, 'VIP Lounge',    3000000, 50,   5),
-(2, 'CAT 1',         1200000, 500,  120),
-(2, 'Festival',       600000, 2000, 500),
-(3, 'Presale A',      350000, 800,  300),
-(3, 'Presale B',      450000, 600,  150),
-(4, 'VIP',           2000000, 200,  200),
-(4, 'Regular',        800000, 800,  800),
-(5, 'Premium',       1800000, 150,  150),
-(5, 'Standard',       900000, 500,  500);
+INSERT INTO konser_jakarta (id, nama_konser, artis, venue, kota, tanggal_konser, jam_mulai, deskripsi, status) VALUES
+(1, 'Konser Spektakuler 2025', 'Dewa 19', 'Stadion Gelora Bung Karno', 'Jakarta', '2025-08-15', '19:00:00', 'Konser reuni Dewa 19 yang spektakuler!', 'upcoming'),
+(3, 'Synchronize Fest', 'Various Artist', 'Gambir Expo', 'Jakarta', '2025-10-03', '14:00:00', 'Festival musik indie terbesar di Indonesia.', 'upcoming'),
+(4, 'Noah World Tour', 'NOAH', 'Istora Senayan', 'Jakarta', '2025-07-10', '20:00:00', 'Tur dunia NOAH kembali hadir di Jakarta.', 'selesai'),
+(5, 'Java Jazz Festival', 'Various Artist', 'Jakarta International Expo', 'Jakarta', '2025-03-01', '12:00:00', 'Pertemuan jazz internasional tahunan.', 'selesai');
 
-INSERT INTO transaksi (kode_transaksi, user_id, tiket_id, jumlah_tiket, total_harga, status, metode_bayar) VALUES
-('TRX-20250101-001', 2, 1, 2, 5000000,  'paid',      'transfer_bank'),
-('TRX-20250101-002', 2, 3, 3, 2250000,  'paid',      'gopay'),
-('TRX-20250102-001', 3, 2, 1, 1500000,  'paid',      'ovo'),
-('TRX-20250102-002', 3, 5, 2, 2400000,  'pending',   'transfer_bank'),
-('TRX-20250103-001', 4, 7, 4, 1400000,  'paid',      'dana'),
-('TRX-20250103-002', 2, 8, 2, 900000,   'cancelled', 'gopay'),
-('TRX-20250104-001', 4, 4, 1, 3000000,  'paid',      'transfer_bank');
+INSERT INTO tiket (id, konser_id, kategori, harga, kuota, terjual, keterangan) VALUES
+(1, 1, 'VVIP', 2500000.00, 100, 13, NULL),
+(2, 1, 'VIP', 1500000.00, 300, 45, NULL),
+(3, 1, 'Festival', 750000.00, 1000, 200, NULL),
+(4, 2, 'VIP Lounge', 3000000.00, 50, 5, NULL),
+(5, 2, 'CAT 1', 1200000.00, 500, 122, NULL),
+(6, 2, 'Festival', 600000.00, 2000, 500, NULL),
+(7, 3, 'Presale A', 350000.00, 800, 300, NULL),
+(8, 3, 'Presale B', 450000.00, 600, 150, NULL),
+(9, 4, 'VIP', 2000000.00, 200, 200, NULL),
+(10, 4, 'Regular', 800000.00, 800, 800, NULL),
+(11, 5, 'Premium', 1800000.00, 150, 150, NULL),
+(12, 5, 'Standard', 900000.00, 500, 500, NULL);
+
+INSERT INTO transaksi (id, kode_transaksi, user_id, tiket_id, jumlah_tiket, total_harga, status, metode_bayar, catatan) VALUES
+(1, 'TRX-20250101-001', 2, 1, 2, 5000000.00, 'paid', 'transfer_bank', NULL),
+(2, 'TRX-20250101-002', 2, 3, 3, 2250000.00, 'paid', 'gopay', NULL),
+(3, 'TRX-20250102-001', 3, 2, 1, 1500000.00, 'paid', 'ovo', NULL),
+(4, 'TRX-20250102-002', 3, 5, 2, 2400000.00, 'paid', 'transfer_bank', NULL),
+(5, 'TRX-20250103-001', 4, 7, 4, 1400000.00, 'paid', 'dana', NULL),
+(6, 'TRX-20250103-002', 2, 8, 2, 900000.00, 'cancelled', 'gopay', NULL),
+(7, 'TRX-20250104-001', 4, 4, 1, 3000000.00, 'paid', 'transfer_bank', NULL),
+(8, 'TRX-20260603-00057411', 5, 1, 5, 12500000.00, 'pending', 'gopay', NULL),
+(9, 'TRX-20260603-00055292', 5, 1, 1, 2500000.00, 'paid', 'gopay', NULL),
+(10, 'TRX-20260603-00057707', 5, 1, 2, 5000000.00, 'refunded', 'gopay', NULL),
+(11, 'TRX-20260603-00051360', 5, 1, 3, 7500000.00, 'pending', 'transfer_bank', NULL);
+
+INSERT INTO jenis_bayar (id, kode_transaksi, total_harga, metode_bayar) VALUES
+(1, 'TRX-20250101-001', 5000000.00, 'transfer_bank'),
+(2, 'TRX-20250101-002', 2250000.00, 'gopay'),
+(3, 'TRX-20250102-001', 1500000.00, 'ovo'),
+(4, 'TRX-20250102-002', 2400000.00, 'transfer_bank'),
+(5, 'TRX-20250103-001', 1400000.00, 'dana'),
+(6, 'TRX-20250103-002', 900000.00, 'gopay'),
+(7, 'TRX-20250104-001', 3000000.00, 'transfer_bank'),
+(8, 'TRX-20260603-00057411', 12500000.00, 'gopay'),
+(9, 'TRX-20260603-00055292', 2500000.00, 'gopay'),
+(10, 'TRX-20260603-00057707', 5000000.00, 'gopay'),
+(11, 'TRX-20260603-00051360', 7500000.00, 'transfer_bank');
+
+INSERT INTO log_transaksi (id, transaksi_id, kode_transaksi, user_id, aksi, keterangan, created_at) VALUES
+(1, 8, 'TRX-20260603-00057411', 5, 'BOOKING_CREATED', 'Booking 5 tiket, total Rp 12500000.00', '2026-06-03 19:08:54'),
+(2, 9, 'TRX-20260603-00055292', 5, 'BOOKING_CREATED', 'Booking 1 tiket, total Rp 2500000.00', '2026-06-03 19:09:02'),
+(3, 10, 'TRX-20260603-00057707', 5, 'BOOKING_CREATED', 'Booking 2 tiket, total Rp 5000000.00', '2026-06-03 19:09:14'),
+(4, 10, 'TRX-20260603-00057707', 5, 'PAYMENT_CONFIRMED', 'Stok tiket ID=1 berkurang 2 unit', '2026-06-03 19:09:18'),
+(5, 11, 'TRX-20260603-00051360', 5, 'BOOKING_CREATED', 'Booking 3 tiket, total Rp 7500000.00', '2026-06-03 19:10:54'),
+(6, 4, 'TRX-20250102-002', 3, 'PAYMENT_CONFIRMED', 'Stok tiket ID=5 berkurang 2 unit', '2026-06-05 21:26:09'),
+(7, 9, 'TRX-20260603-00055292', 5, 'PAYMENT_CONFIRMED', 'Stok tiket ID=1 berkurang 1 unit', '2026-06-05 21:58:11');
 
 CREATE VIEW v_tiket_tersedia AS
 SELECT
@@ -153,7 +207,7 @@ SELECT
     k.id            AS konser_id,
     k.nama_konser,
     k.artis,
-    COUNT(tr.id)                            AS total_transaksi,
+    COUNT(tr.id)                                                    AS total_transaksi,
     SUM(CASE WHEN tr.status='paid' THEN tr.jumlah_tiket ELSE 0 END) AS tiket_terjual,
     SUM(CASE WHEN tr.status='paid' THEN tr.total_harga  ELSE 0 END) AS total_pendapatan
 FROM konser k
