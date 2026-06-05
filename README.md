@@ -38,6 +38,23 @@ Selain itu, sistem ini juga menerapkan beberapa konsep database lanjutan lainnya
 
 Dengan penerapan konsep tersebut, Ngonser.id tidak hanya berfungsi sebagai aplikasi pemesanan tiket konser, tetapi juga menjadi implementasi nyata dari pengelolaan database yang lebih aman, terstruktur, dan konsisten.
 
+### 1. Stored Procedure & ACID Transaction
+Digunakan untuk menangani alur utama pemesanan tiket pada file `booking.php`. Prosedur ini menerapkan prinsip **ACID** dan **Row-Level Locking** untuk mencegah *oversold* (tiket terjual melebihi kuota).
+
+**`sp_checkout_tiket(p_user_id, p_tiket_id, p_jumlah, p_metode, OUT p_result, OUT p_kode_trx)`**
+*   **Mekanisme:** Mengunci baris tiket (`FOR UPDATE`) $\rightarrow$ Validasi sisa kuota $\rightarrow$ Generate kode transaksi $\rightarrow$ Insert data transaksi $\rightarrow$ `COMMIT`.
+*   **Keamanan:** Menggunakan `EXIT HANDLER` untuk melakukan `ROLLBACK` otomatis jika terjadi kesalahan sistem.
+
+```php
+// Implementasi pemanggilan pada booking.php
+$stmt = $db->prepare("CALL sp_checkout_tiket(?, ?, ?, ?, @result, @kode_trx)");
+$stmt->bind_param('iiis', $userId, $tiketId, $jumlah, $metode);
+$stmt->execute();
+
+// Mengambil output result & kode transaksi dari database
+$result = $db->query("SELECT @result AS result, @kode_trx AS kode_trx")->fetch_assoc();
+$p_result = $result['result'];
+$p_kode_trx = $result['kode_trx'];
 
 ## 💾 Backup Otomatis
 
