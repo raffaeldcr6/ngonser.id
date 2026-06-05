@@ -7,17 +7,7 @@ Sistem ini dilengkapi dengan fitur login pengguna, dashboard user, pemesanan tik
 
 Berikut adalah tampilan halaman utama dari sistem **NGONSER.ID**:
 
-### Trigger
-
 <img src="imgAset/Dashboard.png" alt="Tampilan Dashboard NGONSER.ID" width="900">
-
-### Function
-
-<img src="imgAset/Function.png" alt="Function NGONSER.ID" width="900">
-
-### Stored Procedure
-
-<img src="imgAset/procedur.png" alt="Stored Procedure NGONSER.ID" width="900">
 
 
 ## 📌 Detail Konsep
@@ -27,7 +17,19 @@ Berikut adalah tampilan halaman utama dari sistem **NGONSER.ID**:
 Dalam project **Ngonser.id**, stored procedure digunakan untuk menangani proses penting seperti penambahan tiket, penghapusan tiket, checkout pemesanan tiket, dan konfirmasi pembayaran. Dengan adanya stored procedure, proses yang berhubungan langsung dengan data transaksi tidak hanya dijalankan dari sisi PHP, tetapi juga dikontrol langsung oleh database agar lebih aman dan terstruktur.
 
 Selain itu, sistem ini juga menerapkan beberapa konsep database lanjutan lainnya, seperti **function**, **trigger**, **view**, **transaction**, **backup database**, dan **simulasi deadlock**. Konsep-konsep ini digunakan untuk mendukung pengelolaan data konser, tiket, transaksi, dan pengguna agar sistem dapat berjalan lebih stabil.
+
+### Trigger
+
 <img src="imgAset/triggers.png" alt="Stored Procedure dan Trigger NGONSER.ID" width="900">
+
+### Function
+
+<img src="imgAset/Function.png" alt="Function NGONSER.ID" width="900">
+
+### Stored Procedure
+
+<img src="imgAset/procedur.png" alt="Stored Procedure NGONSER.ID" width="900">
+
 
 - **Function** digunakan untuk membantu menghasilkan nilai tertentu, seperti status ketersediaan tiket berdasarkan jumlah kuota dan tiket yang sudah terjual.
 - **Trigger** digunakan untuk menjalankan proses otomatis ketika terjadi perubahan data, misalnya saat transaksi pembayaran dikonfirmasi dan stok tiket perlu diperbarui.
