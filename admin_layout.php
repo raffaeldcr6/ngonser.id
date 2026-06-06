@@ -22,35 +22,38 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     </div>
     <nav class="sidebar-menu">
       <div class="sidebar-section">Utama</div>
-      <a href="<?= APP_URL ?>/admin.php"      class="sidebar-item <?= $currentPage==='admin.php'?'active':'' ?>">
+      <a href="<?= APP_URL ?>/admin.php" class="sidebar-item <?= $currentPage==='admin.php' && empty($_GET['page']) ? 'active' : '' ?>">
         <span class="icon">📊</span> Dashboard
       </a>
-      <a href="<?= APP_URL ?>/dashboard.php"  class="sidebar-item">
+      <a href="<?= APP_URL ?>/dashboard.php" class="sidebar-item">
         <span class="icon">🏠</span> Kembali ke Beranda
       </a>
 
       <div class="sidebar-section">Manajemen</div>
-      <a href="<?= APP_URL ?>/admin.php?page=konser"      class="sidebar-item <?= ($_GET['page']??'')==='konser'?'active':'' ?>">
+      <a href="<?= APP_URL ?>/admin.php?page=konser" class="sidebar-item <?= ($_GET['page']??'')==='konser'?'active':'' ?>">
         <span class="icon">🎵</span> Konser
       </a>
-      <a href="<?= APP_URL ?>/admin.php?page=tiket"        class="sidebar-item <?= ($_GET['page']??'')==='tiket'?'active':'' ?>">
+      <a href="<?= APP_URL ?>/admin.php?page=tiket" class="sidebar-item <?= ($_GET['page']??'')==='tiket'?'active':'' ?>">
         <span class="icon">🎟️</span> Tiket
       </a>
-      <a href="<?= APP_URL ?>/admin.php?page=transaksi"   class="sidebar-item <?= ($_GET['page']??'')==='transaksi'?'active':'' ?>">
+      <a href="<?= APP_URL ?>/admin.php?page=transaksi" class="sidebar-item <?= ($_GET['page']??'')==='transaksi'?'active':'' ?>">
         <span class="icon">💳</span> Transaksi
       </a>
-      <a href="<?= APP_URL ?>/admin.php?page=users"       class="sidebar-item <?= ($_GET['page']??'')==='users'?'active':'' ?>">
+      <a href="<?= APP_URL ?>/admin.php?page=users" class="sidebar-item <?= ($_GET['page']??'')==='users'?'active':'' ?>">
         <span class="icon">👥</span> Pengguna
       </a>
 
       <div class="sidebar-section">PDT Advanced</div>
-      <a href="<?= APP_URL ?>/backup.php"     class="sidebar-item <?= $currentPage==='backup.php'?'active':'' ?>">
+      <a href="<?= APP_URL ?>/backup.php" class="sidebar-item <?= $currentPage==='backup.php'?'active':'' ?>">
         <span class="icon">💾</span> Backup Database
       </a>
       <a href="<?= APP_URL ?>/backup_list.php" class="sidebar-item <?= $currentPage==='backup_list.php'?'active':'' ?>">
         <span class="icon">📂</span> Daftar Backup
       </a>
-      <a href="<?= APP_URL ?>/admin.php?page=deadlock"    class="sidebar-item <?= ($_GET['page']??'')==='deadlock'?'active':'' ?>">
+      <a href="<?= APP_URL ?>/admin.php?page=fragmentasi" class="sidebar-item <?= ($_GET['page']??'')==='fragmentasi'?'active':'' ?>">
+        <span class="icon">🧩</span> Fragmentasi Data
+      </a>
+      <a href="<?= APP_URL ?>/admin.php?page=deadlock" class="sidebar-item <?= ($_GET['page']??'')==='deadlock'?'active':'' ?>">
         <span class="icon">🔄</span> Simulasi Deadlock
       </a>
 

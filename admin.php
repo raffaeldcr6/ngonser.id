@@ -2,13 +2,13 @@
 require_once __DIR__ . '/config/database.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 requireAdmin();
-
+ 
 $db   = getDB();
 $page = sanitize($_GET['page'] ?? 'dashboard');
-
+ 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $act = sanitize($_POST['action'] ?? '');
-
+ 
     if ($act === 'tambah_konser') {
     $nama_konser    = sanitize($_POST['nama_konser'] ?? '');
     $artis          = sanitize($_POST['artis'] ?? '');
@@ -18,13 +18,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $jam_mulai      = sanitize($_POST['jam_mulai'] ?? '');
     $deskripsi      = sanitize($_POST['deskripsi'] ?? '');
     $status         = sanitize($_POST['status'] ?? 'upcoming');
-
+ 
     $stmt = $db->prepare("
         INSERT INTO konser 
         (nama_konser, artis, venue, kota, tanggal_konser, jam_mulai, deskripsi, status) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ");
-
+ 
     $stmt->bind_param(
         'ssssssss',
         $nama_konser,
@@ -36,28 +36,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $deskripsi,
         $status
     );
-
+ 
     $stmt->execute()
         ? flashMessage('success', 'Konser berhasil ditambahkan.')
         : flashMessage('error', 'Gagal menambahkan konser.');
-
+ 
     redirect(APP_URL . '/admin.php?page=konser');
 }
-
+ 
     if ($act === 'hapus_konser') {
         $id = (int)$_POST['id'];
         $db->query("DELETE FROM konser WHERE id=$id");
         flashMessage('success', 'Konser dihapus.');
         redirect(APP_URL . '/admin.php?page=konser');
     }
-
+ 
     if ($act === 'tambah_tiket') {
         $kid  = (int)$_POST['konser_id'];
         $kat  = sanitize($_POST['kategori']    ?? '');
         $hrg  = (float)($_POST['harga']        ?? 0);
         $kta  = (int)($_POST['kuota']          ?? 0);
         $ket  = sanitize($_POST['keterangan']  ?? '');
-
+ 
         
         $stmt = $db->prepare("CALL sp_tambah_tiket(?,?,?,?,?,@result)");
         $stmt->bind_param('isdis', $kid, $kat, $hrg, $kta, $ket);
@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             : flashMessage('error',   $res['r']);
         redirect(APP_URL . '/admin.php?page=tiket');
     }
-
+ 
     if ($act === 'hapus_tiket') {
         $id = (int)$_POST['id'];
         $stmt = $db->prepare("CALL sp_hapus_tiket(?, @result)");
@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             : flashMessage('error',   $res['r']);
         redirect(APP_URL . '/admin.php?page=tiket');
     }
-
+ 
     if ($act === 'update_status_trx') {
         $kode   = sanitize($_POST['kode_trx'] ?? '');
         $status = sanitize($_POST['status']   ?? '');
@@ -100,10 +100,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect(APP_URL . '/admin.php?page=transaksi');
     }
 }
-
-
+ 
+ 
 $data = [];
-
+ 
 switch ($page) {
     case 'dashboard':
         $data['stats'] = $db->query("
@@ -125,11 +125,11 @@ switch ($page) {
             ORDER BY tr.created_at DESC LIMIT 8
         ")->fetch_all(MYSQLI_ASSOC);
         break;
-
+ 
     case 'konser':
         $data['list'] = $db->query("SELECT * FROM konser ORDER BY tanggal_konser DESC")->fetch_all(MYSQLI_ASSOC);
         break;
-
+ 
     case 'tiket':
         
         $data['list'] = $db->query("
@@ -141,7 +141,7 @@ switch ($page) {
         ")->fetch_all(MYSQLI_ASSOC);
         $data['konser_list'] = $db->query("SELECT id, nama_konser FROM konser ORDER BY nama_konser")->fetch_all(MYSQLI_ASSOC);
         break;
-
+ 
     case 'transaksi':
         
         $data['list'] = $db->query("SELECT * FROM v_riwayat_transaksi ORDER BY waktu_pesan DESC")->fetch_all(MYSQLI_ASSOC);
@@ -154,11 +154,25 @@ switch ($page) {
             LIMIT 5
         ")->fetch_all(MYSQLI_ASSOC);
         break;
-
+ 
+    case 'fragmentasi':
+        $data['konser_jakarta'] = $db->query("
+            SELECT id, nama_konser, artis, venue, kota, tanggal_konser, jam_mulai, status
+            FROM konser_jakarta
+            ORDER BY tanggal_konser DESC
+        ")->fetch_all(MYSQLI_ASSOC);
+ 
+        $data['jenis_bayar'] = $db->query("
+            SELECT id, kode_transaksi, total_harga, metode_bayar
+            FROM jenis_bayar
+            ORDER BY id DESC
+        ")->fetch_all(MYSQLI_ASSOC);
+        break;
+ 
     case 'users':
         $data['list'] = $db->query("SELECT id, nama, email, phone, role, created_at FROM users ORDER BY id")->fetch_all(MYSQLI_ASSOC);
         break;
-
+ 
     case 'deadlock':
         
         $data['tikets'] = $db->query("
@@ -166,11 +180,11 @@ switch ($page) {
         ")->fetch_all(MYSQLI_ASSOC);
         break;
 }
-
+ 
 $pageTitle = ucfirst($page);
 require_once __DIR__ . '/admin_layout.php';
 ?>
-
+ 
 <?php if ($page === 'dashboard'): ?>
 <div class="d-flex justify-between align-center mb-4 flex-wrap">
   <div>
@@ -178,8 +192,8 @@ require_once __DIR__ . '/admin_layout.php';
     <p class="page-subtitle">Ringkasan sistem Ngonser.id</p>
   </div>
 </div>
-
-
+ 
+ 
 <div class="stats-grid">
   <div class="stat-card">
     <div class="stat-label">Total Users</div>
@@ -198,13 +212,13 @@ require_once __DIR__ . '/admin_layout.php';
     <div class="stat-value" style="font-size:1.3rem"><?= formatRupiah($data['stats']['total_revenue'] ?? 0) ?></div>
   </div>
 </div>
-
+ 
 <div class="highlight-box mb-4">
   <strong class="text-accent">⚡ PDT Implementation Aktif:</strong>
-  <span class="text-muted"> Views, JOINs, Stored Procedures, Triggers, Transactions, Backup, Deadlock Simulation</span>
+  <span class="text-muted"> Views, JOINs, Stored Procedures, Triggers, Transactions, Backup, Fragmentasi, Task Schedule, Deadlock Simulation</span>
 </div>
-
-
+ 
+ 
 <h2 class="section-title mb-1">STATISTIK KONSER</h2>
 <p class="page-subtitle">Via View: <code>v_statistik_konser</code> (Modul 2: Database Views)</p>
 <div class="table-wrapper mb-4">
@@ -223,7 +237,7 @@ require_once __DIR__ . '/admin_layout.php';
     </tbody>
   </table>
 </div>
-
+ 
 <h2 class="section-title mb-1">TRANSAKSI TERBARU</h2>
 <p class="page-subtitle">Via <code>INNER JOIN</code> users + tiket + konser (Modul 2: SQL Joins)</p>
 <div class="table-wrapper">
@@ -243,7 +257,7 @@ require_once __DIR__ . '/admin_layout.php';
     </tbody>
   </table>
 </div>
-
+ 
 <?php elseif ($page === 'konser'): ?>
 <div class="d-flex justify-between align-center mb-3 flex-wrap">
   <div>
@@ -252,7 +266,7 @@ require_once __DIR__ . '/admin_layout.php';
   </div>
   <button class="btn btn-primary" data-modal-target="modal-tambah-konser">+ Tambah Konser</button>
 </div>
-
+ 
 <div class="table-wrapper">
   <table>
     <thead><tr><th>Nama Konser</th><th>Artis</th><th>Venue</th><th>Tanggal</th><th>Status</th><th>Aksi</th></tr></thead>
@@ -266,7 +280,7 @@ require_once __DIR__ . '/admin_layout.php';
         <td><span class="badge badge-<?= $r['status']==='upcoming'?'success':($r['status']==='selesai'?'secondary':'danger') ?>"><?= e($r['status']) ?></span></td>
         <td>
           <a href="<?= APP_URL ?>/admin.php?page=tiket&konser_id=<?= $r['id'] ?>" class="btn btn-primary btn-sm">+ Tambah Tiket</a>
-
+ 
           <form method="POST" style="display:inline">
             <input type="hidden" name="action" value="hapus_konser">
             <input type="hidden" name="id" value="<?= $r['id'] ?>">
@@ -278,49 +292,49 @@ require_once __DIR__ . '/admin_layout.php';
     </tbody>
   </table>
 </div>
-
+ 
 <div id="modal-tambah-konser" class="modal-overlay">
   <div class="modal">
     <button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('open')">✕</button>
     <h3 style="font-family:var(--font-display);font-size:1.5rem;margin-bottom:1.5rem;">TAMBAH KONSER</h3>
     <form method="POST">
       <input type="hidden" name="action" value="tambah_konser">
-
+ 
       <div class="form-group">
         <label class="form-label">Nama Konser</label>
         <input type="text" name="nama_konser" class="form-control" required>
       </div>
-
+ 
       <div class="form-group">
         <label class="form-label">Artis</label>
         <input type="text" name="artis" class="form-control" required>
       </div>
-
+ 
       <div class="form-group">
         <label class="form-label">Venue</label>
         <input type="text" name="venue" class="form-control" required>
       </div>
-
+ 
       <div class="form-group">
         <label class="form-label">Kota</label>
         <input type="text" name="kota" class="form-control" required>
       </div>
-
+ 
       <div class="form-group">
         <label class="form-label">Tanggal</label>
         <input type="date" name="tanggal_konser" class="form-control" required>
       </div>
-
+ 
       <div class="form-group">
         <label class="form-label">Jam Mulai</label>
         <input type="time" name="jam_mulai" class="form-control" required>
       </div>
-
+ 
       <div class="form-group">
         <label class="form-label">Deskripsi</label>
         <textarea name="deskripsi" class="form-control" rows="3"></textarea>
       </div>
-
+ 
       <div class="form-group">
         <label class="form-label">Status</label>
         <select name="status" class="form-control">
@@ -330,12 +344,12 @@ require_once __DIR__ . '/admin_layout.php';
           <option value="batal">Batal</option>
         </select>
       </div>
-
+ 
       <button type="submit" class="btn btn-primary btn-block">Simpan Konser</button>
     </form>
   </div>
 </div>
-
+ 
 <?php elseif ($page === 'tiket'): ?>
 <div class="d-flex justify-between align-center mb-3 flex-wrap">
   <div>
@@ -344,7 +358,7 @@ require_once __DIR__ . '/admin_layout.php';
   </div>
   <button class="btn btn-primary" data-modal-target="modal-tambah-tiket">+ Tambah Tiket</button>
 </div>
-
+ 
 <div class="table-wrapper">
   <table>
     <thead><tr><th>Konser</th><th>Kategori</th><th>Harga</th><th>Kuota</th><th>Terjual</th><th>Sisa</th><th>Status</th><th>Aksi</th></tr></thead>
@@ -380,14 +394,14 @@ require_once __DIR__ . '/admin_layout.php';
     </tbody>
   </table>
 </div>
-
+ 
 <div id="modal-tambah-tiket" class="modal-overlay">
   <div class="modal">
     <button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('open')">✕</button>
     <h3 style="font-family:var(--font-display);font-size:1.5rem;margin-bottom:1.5rem;">TAMBAH TIKET</h3>
     <form method="POST">
       <input type="hidden" name="action" value="tambah_tiket">
-
+ 
       <div class="form-group">
         <label class="form-label">Konser</label>
         <select name="konser_id" class="form-control" required>
@@ -398,32 +412,32 @@ require_once __DIR__ . '/admin_layout.php';
           <?php endforeach; ?>
         </select>
       </div>
-
+ 
       <div class="form-group">
         <label class="form-label">Kategori</label>
         <input type="text" name="kategori" class="form-control" placeholder="VIP, VVIP, Festival..." required>
       </div>
-
+ 
       <div class="form-group">
         <label class="form-label">Harga (Rp)</label>
         <input type="number" name="harga" class="form-control" min="0" required>
       </div>
-
+ 
       <div class="form-group">
         <label class="form-label">Kuota</label>
         <input type="number" name="kuota" class="form-control" min="1" required>
       </div>
-
+ 
       <div class="form-group">
         <label class="form-label">Keterangan</label>
         <textarea name="keterangan" class="form-control" rows="2"></textarea>
       </div>
-
+ 
       <button type="submit" class="btn btn-primary btn-block">Simpan Tiket</button>
     </form>
   </div>
 </div>
-
+ 
 <?php if (isset($_GET['konser_id'])): ?>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -431,11 +445,11 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 <?php endif; ?>
-
+ 
 <?php elseif ($page === 'transaksi'): ?>
 <h1 class="page-title">SEMUA TRANSAKSI</h1>
 <p class="page-subtitle">Via View: <code>v_riwayat_transaksi</code> (Modul 2: Views + JOIN)</p>
-
+ 
 <?php if (!empty($data['set_ops'])): ?>
 <div class="highlight-box mb-3">
   <strong>📊 Set Operations (Modul 2 INTERSECT simulasi):</strong> User dengan transaksi PAID dan PENDING:
@@ -444,7 +458,7 @@ document.addEventListener('DOMContentLoaded', function () {
   <?php endforeach; ?>
 </div>
 <?php endif; ?>
-
+ 
 <div class="table-wrapper">
   <table>
     <thead><tr><th>Kode</th><th>Pembeli</th><th>Konser</th><th>Kategori</th><th>Jml</th><th>Total</th><th>Status</th><th>Metode</th><th>Aksi</th></tr></thead>
@@ -481,7 +495,93 @@ document.addEventListener('DOMContentLoaded', function () {
     </tbody>
   </table>
 </div>
-
+ 
+<?php elseif ($page === 'fragmentasi'): ?>
+ 
+<div class="d-flex justify-between align-center mb-3 flex-wrap">
+  <div>
+    <h1 class="page-title">FRAGMENTASI DATA</h1>
+    <p class="page-subtitle">Implementasi Fragmentasi Horizontal dan Vertikal pada database Ngonser.id</p>
+  </div>
+</div>
+ 
+<div class="highlight-box mb-4">
+  <strong class="text-accent">🧩 PDT - Fragmentasi Data:</strong>
+  <span class="text-muted">
+    Halaman ini menampilkan hasil pemecahan data dari tabel utama ke tabel fragmentasi.
+  </span>
+</div>
+ 
+<h2 class="section-title mb-1">FRAGMENTASI HORIZONTAL</h2>
+<p class="page-subtitle">
+  Tabel <code>konser_jakarta</code> merupakan hasil fragmentasi horizontal dari tabel <code>konser</code>.
+  Data dipisahkan berdasarkan baris dengan kondisi kota = Jakarta.
+</p>
+ 
+<div class="table-wrapper mb-4">
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nama Konser</th>
+        <th>Artis</th>
+        <th>Venue</th>
+        <th>Kota</th>
+        <th>Tanggal</th>
+        <th>Jam</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php foreach ($data['konser_jakarta'] as $r): ?>
+      <tr>
+        <td><?= $r['id'] ?></td>
+        <td><?= e($r['nama_konser']) ?></td>
+        <td><?= e($r['artis']) ?></td>
+        <td><?= e($r['venue']) ?></td>
+        <td><?= e($r['kota']) ?></td>
+        <td><?= date('d M Y', strtotime($r['tanggal_konser'])) ?></td>
+        <td><?= date('H:i', strtotime($r['jam_mulai'])) ?></td>
+        <td>
+          <span class="badge badge-<?= $r['status']==='upcoming'?'success':($r['status']==='selesai'?'secondary':'danger') ?>">
+            <?= e($r['status']) ?>
+          </span>
+        </td>
+      </tr>
+      <?php endforeach; ?>
+    </tbody>
+  </table>
+</div>
+ 
+<h2 class="section-title mb-1">FRAGMENTASI VERTIKAL</h2>
+<p class="page-subtitle">
+  Tabel <code>jenis_bayar</code> merupakan hasil fragmentasi vertikal dari tabel <code>transaksi</code>.
+  Data dipisahkan berdasarkan kolom yang berkaitan dengan pembayaran.
+</p>
+ 
+<div class="table-wrapper">
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Kode Transaksi</th>
+        <th>Total Harga</th>
+        <th>Metode Bayar</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php foreach ($data['jenis_bayar'] as $r): ?>
+      <tr>
+        <td><?= $r['id'] ?></td>
+        <td><code><?= e($r['kode_transaksi']) ?></code></td>
+        <td><?= formatRupiah($r['total_harga']) ?></td>
+        <td><?= e($r['metode_bayar'] ?? '-') ?></td>
+      </tr>
+      <?php endforeach; ?>
+    </tbody>
+  </table>
+</div>
+ 
 <?php elseif ($page === 'users'): ?>
 <h1 class="page-title">DAFTAR PENGGUNA</h1>
 <p class="page-subtitle">Semua user yang terdaftar di sistem</p>
@@ -502,11 +602,11 @@ document.addEventListener('DOMContentLoaded', function () {
     </tbody>
   </table>
 </div>
-
+ 
 <?php elseif ($page === 'deadlock'): ?>
 <h1 class="page-title">SIMULASI DEADLOCK</h1>
 <p class="page-subtitle">Visualisasi interaktif kebuntuan transaksi (Modul 4: Deadlock Management)</p>
-
+ 
 <div class="grid-2 mb-4" style="gap:2rem;align-items:start;">
   <div>
     <div class="card">
@@ -515,7 +615,7 @@ document.addEventListener('DOMContentLoaded', function () {
           <h3 style="font-family:var(--font-display);font-size:1.3rem">ARENA SIMULASI</h3>
           <span id="step-counter" class="badge badge-info">Langkah 0/8</span>
         </div>
-
+ 
         
         <div id="deadlock-container" class="deadlock-arena" style="min-height:300px;position:relative;">
           <svg class="arrow-svg"></svg>
@@ -527,7 +627,7 @@ document.addEventListener('DOMContentLoaded', function () {
             Circular Wait Diagram
           </div>
         </div>
-
+ 
         <div class="d-flex gap-1 mt-3 flex-wrap">
           <button class="btn btn-primary btn-sm" onclick="deadlockSim.nextStep()">▶ Langkah Berikutnya</button>
           <button class="btn btn-outline btn-sm"  onclick="deadlockSim.autoRun(1200)">⚡ Jalankan Otomatis</button>
@@ -536,7 +636,7 @@ document.addEventListener('DOMContentLoaded', function () {
       </div>
     </div>
   </div>
-
+ 
   
   <div>
     <div class="card mb-3">
@@ -547,7 +647,7 @@ document.addEventListener('DOMContentLoaded', function () {
         </div>
       </div>
     </div>
-
+ 
     <div class="card">
       <div class="card-body">
         <h3 style="font-family:var(--font-display);font-size:1.1rem;margin-bottom:1rem;">🛡️ PENANGANAN DEADLOCK</h3>
@@ -579,8 +679,8 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
   </div>
 </div>
-
-
+ 
+ 
 <div class="card">
   <div class="card-body">
     <h3 style="font-family:var(--font-display);font-size:1.3rem;margin-bottom:1rem;">📚 KARAKTERISTIK DEADLOCK (Coffman Conditions)</h3>
@@ -602,7 +702,7 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
   </div>
 </div>
-
+ 
 <style>
 .log-line { padding:.25rem 0; border-bottom:1px solid rgba(255,255,255,.05); }
 .log-time  { color:var(--text-muted);margin-right:.5rem; }
@@ -613,12 +713,12 @@ document.addEventListener('DOMContentLoaded', function () {
 </style>
 <script src="<?= APP_URL ?>/assets/js/main.js"></script>
 <script>initDeadlock('deadlock-container');</script>
-
+ 
 <?php endif; ?>
-
+ 
   </div>
 </div>
-
+ 
 <script src="<?= APP_URL ?>/assets/js/main.js"></script>
 </body>
 </html>

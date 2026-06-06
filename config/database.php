@@ -2,12 +2,12 @@
 define('DB_HOST',   'localhost');
 define('DB_USER',   'root');
 define('DB_PASS',   '');
-define('DB_NAME',   'ngonser');
+define('DB_NAME',   'ngonser_db');
 define('DB_PORT',   3306);
 define('DB_CHARSET','utf8mb4');
 
 define('APP_NAME',  'Ngonser.id');
-define('APP_URL',   'http://localhost/PDT');
+define('APP_URL',   'http://localhost/ngonser.id');
 define('APP_VERSION','1.0.0');
 
 function getDB(): mysqli {
