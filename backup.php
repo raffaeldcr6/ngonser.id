@@ -140,4 +140,8 @@ $flash = getFlash();
         </div>
     </div>
 </body>
+<<<<<<< HEAD
 </html>
+=======
+</html>
+>>>>>>> d92982debed2a94ebf82ac7c14b8d6213e088eac
